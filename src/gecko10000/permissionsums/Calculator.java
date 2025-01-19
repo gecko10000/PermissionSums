@@ -72,6 +72,15 @@ public class Calculator {
         return sums;
     }
 
+    private String doubleFormat() {
+        int decimalPrecision = plugin.getConfig().getInt("decimal-precision");
+        return "%." + decimalPrecision + "f";
+    }
+
+    private String doublePlaceholderFormat() {
+        return "%s" + doubleFormat();
+    }
+
     // At this point, rawPermissions is expected to
     // only contain permissions starting with "sum."
     public Set<String> getSummedPermissions(Set<String> rawPermissions) {
@@ -81,9 +90,8 @@ public class Calculator {
             finalPermissions.add(entry.getKey() + entry.getValue());
         }
         Map<String, Double> decimalSums = sumDecimalPerms(rawPermissions);
-        int decimalPrecision = plugin.getConfig().getInt("decimal-precision");
         for (Map.Entry<String, Double> entry : decimalSums.entrySet()) {
-            String perm = String.format("%s%." + decimalPrecision + "f", entry.getKey(), entry.getValue());
+            String perm = String.format(doublePlaceholderFormat(), entry.getKey(), entry.getValue());
             finalPermissions.add(perm);
         }
         return finalPermissions;
@@ -111,6 +119,16 @@ public class Calculator {
         return truePermissions;
     }
 
+    public String getPermValue(Player target, String permission) {
+        Set<String> perms = extractPerms(target.getEffectivePermissions());
+        Map<String, Integer> intSums = sumIntegerPerms(perms);
+        Map<String, Double> decimalSums = sumDecimalPerms(perms);
+        int placeholderIndex = permission.lastIndexOf("<amount>");
+        String permPrefix = permission.substring(0, placeholderIndex);
+        return intSums.containsKey(permPrefix) ? intSums.get(permPrefix).toString() :
+                decimalSums.containsKey(permPrefix) ? String.format(doubleFormat(), decimalSums.get(permPrefix)) : null;
+    }
+
     public String getSummedPerm(Player target, String permission) {
         Set<String> perms = extractPerms(target.getEffectivePermissions());
         Map<String, Integer> intSums = sumIntegerPerms(perms);
@@ -119,7 +137,7 @@ public class Calculator {
         String permPrefix = permission.substring(0, placeholderIndex);
 
         String value = intSums.containsKey(permPrefix) ? intSums.get(permPrefix).toString() :
-                decimalSums.containsKey(permPrefix) ? decimalSums.get(permPrefix).toString() : null;
+                decimalSums.containsKey(permPrefix) ? String.format(doubleFormat(), decimalSums.get(permPrefix)) : null;
         return value == null ? null : (permPrefix + value);
     }
 
