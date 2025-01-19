@@ -1,0 +1,29 @@
+# Example permission: cmi.command.sethome.<amount>
+# Step 1: ensure the permission is in here! Missing
+# permissions won't be checked.
+# Step 2: set an actual permission with the following
+# format: sum.<permission>.<id>
+# The ID must be something unique because duplicate
+# permissions won't be counted. It also cannot contain
+# a period. Example permissions:
+# sum.cmi.command.sethome.2.starter
+# sum.cmi.command.sethome.2.rank1
+# sum.cmi.command.sethome.3.rank2
+# With the first two permissions, the player will have
+# the permission cmi.command.sethome.4
+# With all three, he will have cmi.command.sethome.7
+integer-permissions:
+  - "cmi.command.sethome.<amount>"
+  - "playerwarps.amount.<amount>"
+# For decimal permissions, the amount can be an
+# integer or a decimal. Examples:
+# sum.jobs.boost.all.all.0.5.rank1
+# sum.jobs.boost.all.all.1.globalbooster
+# This will give the player the permission
+# jobs.boost.all.all.1.50
+# (assuming decimal-precision is set to 2)
+decimal-permissions:
+  - "jobs.boost.all.all.<amount>"
+# The precision for decimal permissions.
+# This will also round off more precise values.
+decimal-precision: 2
