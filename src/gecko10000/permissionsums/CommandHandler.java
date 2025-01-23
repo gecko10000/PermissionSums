@@ -37,6 +37,9 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         }
         if (args[0].equals("reload") && sender.hasPermission("permissionsums.reload")) {
             plugin.reloadConfig();
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                plugin.listeners.recalculate(player);
+            }
             sender.sendMessage(mm.deserialize("<green>Config reloaded."));
             return true;
         }

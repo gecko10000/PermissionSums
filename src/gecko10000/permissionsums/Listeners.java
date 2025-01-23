@@ -38,7 +38,7 @@ public class Listeners implements Listener {
         recalculate(event.getPlayer());
     }
 
-    private void recalculate(Player player) {
+    public void recalculate(Player player) {
         Set<PermissionAttachmentInfo> permissions = player.getEffectivePermissions();
         recalculate(player, plugin.calculator.extractPerms(permissions));
     }
