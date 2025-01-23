@@ -1,7 +1,11 @@
 package gecko10000.permissionsums;
 
+import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.LuckPermsProvider;
+import net.luckperms.api.node.Node;
 import org.bukkit.Bukkit;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
@@ -11,6 +15,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class CommandHandler implements CommandExecutor, TabCompleter {
 
@@ -26,7 +32,16 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
 
     private void showUsage(CommandSender sender) {
         sender.sendMessage(mm.deserialize("<red>Usage: /permsums reload"));
-        sender.sendMessage(mm.deserialize("<red>or /permsums check <permission> [player]"));
+        sender.sendMessage(mm.deserialize("<red>Usage: /permsums check <permission> [player]"));
+        sender.sendMessage(mm.deserialize("<red>Usage: /permsums add <permission> <player>"));
+    }
+
+    private final LuckPerms luckPerms = LuckPermsProvider.get();
+
+    private CompletableFuture<Void> addNode(Player player, String node) {
+        return luckPerms.getUserManager().modifyUser(player.getUniqueId(), u -> {
+            u.data().add(Node.builder(node).build());
+        });
     }
 
     @Override
@@ -60,6 +75,18 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             }
             return true;
         }
+        if (args[0].equals("add") && args.length >= 3 && sender.hasPermission("permissionsums.add")) {
+            Player targetPlayer = Bukkit.getPlayer(args[2]);
+            if (targetPlayer != null) {
+                String permission = "sum." + args[1] + "." + UUID.randomUUID();
+                Component successMessage = mm.deserialize("<green>Gave <player> the permission \"<perm>\".",
+                        Placeholder.unparsed("perm", permission),
+                        Placeholder.component("player", targetPlayer.name()));
+                addNode(targetPlayer, permission)
+                        .thenRun(() -> sender.sendMessage(successMessage));
+                return true;
+            }
+        }
         showUsage(sender);
         return true;
     }
@@ -68,17 +95,36 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
         return Arrays.stream(possible).filter(s -> s.startsWith(arg)).toList();
     }
 
+    private List<String> matchingPerms(String arg) {
+        List<String> allPerms = new ArrayList<>(plugin.getConfig().getStringList("integer-permissions"));
+        allPerms.addAll(plugin.getConfig().getStringList("decimal-permissions"));
+        return matching(arg, allPerms.toArray(String[]::new));
+    }
+
+    private List<String> matchingPlayers(String arg) {
+        return matching(arg, Bukkit.getOnlinePlayers().stream().map(Player::getName).toArray(String[]::new));
+    }
+
+    private List<String> matchingReadyPerms(String arg) {
+        List<String> matchingPerms = matchingPerms(arg);
+        return matchingPerms.stream().map(s -> s.replace("<amount>", "")).toList();
+    }
+
     @Override
     public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 0) return List.of();
-        if (args.length == 1) return matching(args[0], "reload", "check");
+        if (args.length == 1) return matching(args[0], "reload", "check", "add");
         if (args[0].equals("check") && args.length == 2) {
-            List<String> allPerms = new ArrayList<>(plugin.getConfig().getStringList("integer-permissions"));
-            allPerms.addAll(plugin.getConfig().getStringList("decimal-permissions"));
-            return matching(args[1], allPerms.toArray(String[]::new));
+            return matchingPerms(args[1]);
         }
         if (args[0].equals("check") && args.length == 3) {
-            return matching(args[2], Bukkit.getOnlinePlayers().stream().map(Player::getName).toArray(String[]::new));
+            return matchingPlayers(args[2]);
+        }
+        if (args[0].equals("add") && args.length == 2) {
+            return matchingReadyPerms(args[1]);
+        }
+        if (args[0].equals("add") && args.length == 3) {
+            return matchingPlayers(args[2]);
         }
         return List.of();
     }
