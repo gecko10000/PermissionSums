@@ -16,7 +16,7 @@ sourceSets {
 
 
 group = "gecko10000.permissionsums"
-val versionString = "1.1"
+val versionString = "1.2"
 version = versionString
 
 bukkit {

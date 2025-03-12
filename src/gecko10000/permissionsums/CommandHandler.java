@@ -66,7 +66,7 @@ public class CommandHandler implements CommandExecutor, TabCompleter {
             }
             String summed = plugin.calculator.getSummedPerm(target, args[1]);
             if (summed == null) {
-                sender.sendMessage(mm.deserialize("<red>Invalid permission <perm>.", Placeholder.unparsed("perm", args[1])));
+                sender.sendMessage(mm.deserialize("<red>No permissions are set for <perm>.", Placeholder.unparsed("perm", args[1])));
             } else {
                 sender.sendMessage(mm.deserialize("<green><player>'s current permission is <perm>.",
                         Placeholder.component("player", target.name()),

@@ -134,7 +134,7 @@ public class Calculator {
         Map<String, Integer> intSums = sumIntegerPerms(perms);
         Map<String, Double> decimalSums = sumDecimalPerms(perms);
         int placeholderIndex = permission.lastIndexOf("<amount>");
-        String permPrefix = permission.substring(0, placeholderIndex);
+        String permPrefix = placeholderIndex == -1 ? permission : permission.substring(0, placeholderIndex);
 
         String value = intSums.containsKey(permPrefix) ? intSums.get(permPrefix).toString() :
                 decimalSums.containsKey(permPrefix) ? String.format(doubleFormat(), decimalSums.get(permPrefix)) : null;
